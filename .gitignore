@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Build / tooling
+.next/
+dist/
+.dist/
+*.tsbuildinfo
+.DS_Store
+
+# Logs / caches
+*.log
+.cache/
+.pnpm-store/

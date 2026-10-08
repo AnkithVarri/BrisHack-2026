@@ -14,8 +14,8 @@ INITIAL_BACKOFF = 1.0  # seconds
 BACKOFF_MULTIPLIER = 2.0
 
 # ---------------------------------------------------------------------------
-# Open-Meteo customer API key — injected automatically into any request
-# whose URL contains "open-meteo.com".
+# Optional paid Open-Meteo key. Only attached to customer hosts so the
+# public API is not rejected for an unexpected apikey parameter.
 # ---------------------------------------------------------------------------
 OPEN_METEO_API_KEY = os.getenv("OPEN_METEO_API_KEY", "")
 
@@ -64,7 +64,7 @@ async def fetch_with_retry(
     - Exponential backoff, respects Retry-After header
     """
     # Auto-inject Open-Meteo API key for customer endpoints
-    if OPEN_METEO_API_KEY and "open-meteo.com" in url:
+    if OPEN_METEO_API_KEY and "customer-" in url and "open-meteo.com" in url:
         params = {**params, "apikey": OPEN_METEO_API_KEY}
 
     key = _cache_key(url, params)

@@ -3,9 +3,10 @@ from typing import Any
 
 from services.http_client import fetch_with_retry
 
-FORECAST_API_URL = "https://customer-api.open-meteo.com/v1/forecast"
-HISTORICAL_API_URL = "https://customer-archive-api.open-meteo.com/v1/archive"
-CLIMATE_API_URL = "https://customer-climate-api.open-meteo.com/v1/climate"
+# Public Open-Meteo endpoints. The customer-* hosts require a paid API key.
+FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"
+HISTORICAL_API_URL = "https://archive-api.open-meteo.com/v1/archive"
+CLIMATE_API_URL = "https://climate-api.open-meteo.com/v1/climate"
 
 
 async def get_monthly_weather(

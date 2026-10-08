@@ -18,12 +18,23 @@ interface GeocoderFeature {
 }
 
 interface LocationSearchProps {
-  accessToken: string
   onSelect: (center: [number, number], placeName: string) => void
   onLoadingChange?: (isLoading: boolean) => void
 }
 
-export function LocationSearch({ accessToken, onSelect, onLoadingChange }: LocationSearchProps) {
+function formatPhotonPlace(properties: Record<string, string | undefined>): string {
+  const parts = [
+    properties.name,
+    properties.street,
+    properties.city || properties.county,
+    properties.state,
+    properties.country,
+  ].filter((part): part is string => Boolean(part))
+
+  return [...new Set(parts)].join(", ")
+}
+
+export function LocationSearch({ onSelect, onLoadingChange }: LocationSearchProps) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<GeocoderFeature[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -39,12 +50,22 @@ export function LocationSearch({ accessToken, onSelect, onLoadingChange }: Locat
       onLoadingChange?.(true)
       try {
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            searchQuery
-          )}.json?access_token=${accessToken}&limit=5`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=5`
         )
         const data = await response.json()
-        setResults(data.features || [])
+        const features = (data.features || []) as Array<{
+          geometry?: { coordinates?: [number, number] }
+          properties?: Record<string, string | undefined>
+        }>
+        setResults(
+          features
+            .filter((feature) => feature.geometry?.coordinates)
+            .map((feature, index) => ({
+              id: String(feature.properties?.osm_id ?? `${feature.geometry!.coordinates!.join(",")}-${index}`),
+              place_name: formatPhotonPlace(feature.properties ?? {}),
+              center: feature.geometry!.coordinates!,
+            }))
+        )
       } catch (error) {
         console.error("Geocoding error:", error)
         setResults([])
@@ -52,7 +73,7 @@ export function LocationSearch({ accessToken, onSelect, onLoadingChange }: Locat
         onLoadingChange?.(false)
       }
     },
-    [accessToken, onLoadingChange]
+    [onLoadingChange]
   )
 
   useEffect(() => {

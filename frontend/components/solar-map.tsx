@@ -1,9 +1,9 @@
 "use client"
 
 import { useRef, useEffect, useCallback, useImperativeHandle, forwardRef, useState } from "react"
-import mapboxgl from "mapbox-gl"
+import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl, type IControl, type StyleSpecification } from "maplibre-gl"
 import MapboxDraw from "@mapbox/mapbox-gl-draw"
-import "mapbox-gl/dist/mapbox-gl.css"
+import "maplibre-gl/dist/maplibre-gl.css"
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css"
 import { area } from "@turf/area"
 import { LocationSearch } from "./location-search"
@@ -30,16 +30,34 @@ interface SolarMapProps {
   maxAreaM2?: number
 }
 
-const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""
+const SATELLITE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    satellite: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Tiles &copy; Esri",
+    },
+  },
+  layers: [{ id: "satellite", type: "raster", source: "satellite" }],
+}
+
+function resolveMapStyle(mapStyle: string): string | StyleSpecification {
+  return mapStyle === "satellite" ? SATELLITE_STYLE : mapStyle
+}
 
 export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function SolarMap(
   { onPolygonsChange, mapStyle, onLoadingChange, onZoomChange, maxAreaM2 = DEFAULT_MAX_AREA_M2 },
   ref
 ) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
+  const map = useRef<MapLibreMap | null>(null)
   const draw = useRef<MapboxDraw | null>(null)
-  const marker = useRef<mapboxgl.Marker | null>(null)
+  const marker = useRef<Marker | null>(null)
   const isLocked = useRef(false)
   const spinEnabled = useRef(true)
   const userInteracting = useRef(false)
@@ -90,6 +108,8 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
 
   const zoomToEarth = useCallback(() => {
     if (!map.current) return
+    userInteracting.current = false
+    map.current.stop()
     map.current.flyTo({
       center: [0, 20],
       zoom: 1.5,
@@ -156,17 +176,26 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
   const handleLocationSelect = useCallback((center: [number, number]) => {
     if (!map.current) return
 
+    userInteracting.current = true
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current)
+      spinTimeoutRef.current = null
+    }
+    map.current.stop()
     map.current.flyTo({
       center: center,
-      zoom: 17,
+      zoom: 15,
       essential: true,
+    })
+    map.current.once("moveend", () => {
+      userInteracting.current = false
     })
 
     if (marker.current) {
       marker.current.remove()
     }
 
-    marker.current = new mapboxgl.Marker({ color: "#f59e0b" })
+    marker.current = new Marker({ color: "#f59e0b" })
       .setLngLat(center)
       .addTo(map.current)
   }, [])
@@ -174,15 +203,15 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
   useEffect(() => {
     if (map.current) return
 
-    mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN
+    setWorkerUrl("/maplibre-gl-worker.js")
 
-    map.current = new mapboxgl.Map({
+    map.current = new MapLibreMap({
       container: mapContainer.current!,
-      style: mapStyle,
+      style: resolveMapStyle(mapStyle),
       center: [0, 20],
       zoom: 1.5,
       pitch: 0,
-      projection: "globe" as unknown as mapboxgl.Projection,
+      projection: "mercator",
     })
 
     draw.current = new MapboxDraw({
@@ -302,8 +331,8 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
     })
 
     map.current.scrollZoom.setWheelZoomRate(1 / 200)
-    map.current.addControl(new mapboxgl.NavigationControl(), "bottom-right")
-    map.current.addControl(draw.current, "top-right")
+    map.current.addControl(new NavigationControl(), "bottom-right")
+    map.current.addControl(draw.current as unknown as IControl, "top-right")
 
     map.current.on("style.load", () => {
       if (map.current?.getLayer("background")) {
@@ -376,7 +405,7 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
 
   useEffect(() => {
     if (map.current) {
-      map.current.setStyle(mapStyle, { diff: true })
+      map.current.setStyle(resolveMapStyle(mapStyle))
     }
   }, [mapStyle])
 
@@ -385,7 +414,6 @@ export const SolarMap = forwardRef<SolarMapHandle, SolarMapProps>(function Solar
       <div ref={mapContainer} className="h-full w-full" />
       <div className="absolute top-4 left-4 z-10">
         <LocationSearch
-          accessToken={MAPBOX_ACCESS_TOKEN}
           onSelect={handleLocationSelect}
           onLoadingChange={onLoadingChange}
         />

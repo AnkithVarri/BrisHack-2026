@@ -57,8 +57,9 @@ from calculations.efficiency_score import (
 )
 from services.nasa_power import fetch_albedo
 
-FORECAST_API_URL = "https://customer-api.open-meteo.com/v1/forecast"
-ARCHIVE_API_URL = "https://customer-archive-api.open-meteo.com/v1/archive"
+# Public Open-Meteo endpoints. The customer-* hosts require a paid API key.
+FORECAST_API_URL = "https://api.open-meteo.com/v1/forecast"
+ARCHIVE_API_URL = "https://archive-api.open-meteo.com/v1/archive"
 MAX_FALLBACK_YEARS = 5
 FUTURE_FORECAST_WINDOW_DAYS = 16
 PAST_FORECAST_WINDOW_DAYS = 92

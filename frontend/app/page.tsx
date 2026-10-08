@@ -12,10 +12,10 @@ import { Slider } from "@/components/ui/slider"
 import { Layers, SlidersHorizontal, Info, Trash2, ChevronUp, ChevronDown, Home } from "lucide-react"
 
 const MAP_STYLES = [
-  { label: "Satellite", value: "mapbox://styles/mapbox/satellite-streets-v12" },
-  { label: "Streets", value: "mapbox://styles/mapbox/streets-v12" },
-  { label: "Light", value: "mapbox://styles/mapbox/light-v11" },
-  { label: "Dark", value: "mapbox://styles/mapbox/dark-v11" },
+  { label: "Satellite", value: "satellite" },
+  { label: "Streets", value: "https://tiles.openfreemap.org/styles/liberty" },
+  { label: "Light", value: "https://tiles.openfreemap.org/styles/positron" },
+  { label: "Dark", value: "https://tiles.openfreemap.org/styles/dark" },
 ]
 
 const SOLAR_API_BASE_URL = process.env.NEXT_PUBLIC_SOLAR_API_URL ?? "http://localhost:8000"

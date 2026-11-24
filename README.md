@@ -208,5 +208,3 @@ npm start
 - Map styles use **Esri World Imagery** (satellite) and **OpenFreeMap** vector styles — no Mapbox token needed for the default experience.
 - Secrets must never be hardcoded; use env vars and the provided `.env.example` files.
 ---
-## License
-Hackathon project — BrisHack 2026. Use and modify as needed for the event and portfolio purposes.

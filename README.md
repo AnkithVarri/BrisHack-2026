@@ -1,5 +1,6 @@
 # BrisHack-2026 — SolarSAT
 **SolarSAT** is a solar panel site-assessment tool built for BrisHack 2026. Draw a polygon on an interactive 3D/2D globe, configure panel parameters, and get daily + yearly efficiency estimates, terrain shading, energy output, and optional AI advisory signals.
+
 **Repo:** [github.com/AnkithVarri/BrisHack-2026](https://github.com/AnkithVarri/BrisHack-2026)
 ---
 ## Features
